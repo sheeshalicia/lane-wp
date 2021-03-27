@@ -23,6 +23,13 @@ if ( ! class_exists( 'Astra_Ext_Advanced_Hooks_Markup' ) ) {
 		private static $instance;
 
 		/**
+		 * Member Variable
+		 *
+		 * @var bool is_layout_content_in_process
+		 */
+		private $is_layout_content_in_process = false;
+
+		/**
 		 *  Initiator
 		 */
 		public static function get_instance() {
@@ -499,8 +506,18 @@ if ( ! class_exists( 'Astra_Ext_Advanced_Hooks_Markup' ) ) {
 							$priority
 						);
 						$footer_counter++;
-					}
+					} elseif ( isset( $layout[0] ) && 'content' == $layout[0] ) {
 
+						add_filter(
+							'render_block',
+							function ( $content, $parsed_block ) use ( $post_id ) {
+								return Astra_Ext_Advanced_Hooks_Markup::get_instance()->render_inside_content( $post_id, $content, $parsed_block );
+							},
+							10,
+							2
+						);
+
+					}
 					if ( isset( $layout[0] ) && '0' != $layout[0] && 'header' != $layout[0] && 'footer' != $layout[0] ) {
 						// Add Action for advanced-hooks.
 						add_action(
@@ -515,7 +532,45 @@ if ( ! class_exists( 'Astra_Ext_Advanced_Hooks_Markup' ) ) {
 					}
 				}
 			}
+		}
 
+		/**
+		 * Generates block array with layout content.
+		 *
+		 * @param int $post_id Post ID.
+		 * @since 3.2.0
+		 */
+		public function generate_blocks( $post_id ) {
+
+			$blocks = array();
+			ob_start();
+			self::get_instance()->get_action_content( $post_id );
+			$content = ob_get_clean();
+
+			$blocks = array(
+				array(
+					'blockName'    => 'core/html',
+					'attrs'        => array(),
+					'innerBlocks'  => array(),
+					'innerHTML'    => $content,
+					'innerContent' => array( $content ),
+				),
+			);
+
+			return $blocks;
+		}
+
+		/**
+		 * Insert array at specific position.
+		 *
+		 * @param array $array Array.
+		 * @param int   $position position of new array element.
+		 * @param array $insert_array Array needs to be inserted.
+		 * @since 3.2.0
+		 */
+		public function array_insert( &$array, $position, $insert_array ) {
+			$first_array = array_splice( $array, 0, $position );
+			$array       = array_merge( $first_array, $insert_array, $array );
 		}
 
 		/**
@@ -548,6 +603,7 @@ if ( ! class_exists( 'Astra_Ext_Advanced_Hooks_Markup' ) ) {
 			} else {
 
 				if ( class_exists( 'Astra_Addon_Page_Builder_Compatibility' ) ) {
+
 					$page_builder_base_instance = Astra_Addon_Page_Builder_Compatibility::get_instance();
 
 					$page_builder_instance = $page_builder_base_instance->get_active_page_builder( $post_id );
@@ -779,6 +835,74 @@ if ( ! class_exists( 'Astra_Ext_Advanced_Hooks_Markup' ) ) {
 			return false;
 		}
 
+		/**
+		 * Create layout blocks data to insert in content.
+		 *
+		 * @param int    $post_id post ID.
+		 * @param string $content block content.
+		 * @param array  $parsed_block Block array.
+		 * @since 3.2.0
+		 */
+		public function render_inside_content( $post_id, $content, $parsed_block ) {
+
+			// We don't want to run this filter when we are processing layout content as it will result in infinite loop.
+			if ( true === $this->is_layout_content_in_process ) {
+				return $content;
+			}
+
+			$layout_meta = get_post_meta( $post_id, 'ast-advanced-hook-content', true );
+			$location    = isset( $layout_meta['location'] ) ? $layout_meta['location'] : 0;
+
+			$this->is_layout_content_in_process = true;
+
+			if ( 'after_blocks' === $location ) {
+
+				$after_blocks = isset( $layout_meta['after_block_number'] ) ? $layout_meta['after_block_number'] : 0;
+
+				// Match block index with After Blocks number and display the content.
+				if (
+					isset( $parsed_block['firstLevelBlock'] )
+					&&
+					$parsed_block['firstLevelBlock']
+					&&
+					isset( $parsed_block['firstLevelBlockIndex'] )
+					&&
+					intval(
+						$parsed_block['firstLevelBlockIndex']
+					) + 1 === intval( $after_blocks )
+				) {
+					ob_start();
+					self::get_instance()->get_action_content( $post_id );
+					$layout_content = ob_get_clean();
+					$content       .= $layout_content;
+				}
+			} elseif ( 'before_headings' === $location ) {
+
+				$headings_number = isset( $layout_meta['before_heading_number'] ) ? $layout_meta['before_heading_number'] : 0;
+
+				// Match block index with before headings number and display the content.
+				if (
+					isset( $parsed_block['firstLevelBlock'] )
+					&&
+					$parsed_block['firstLevelBlock']
+					&&
+					isset( $parsed_block['firstLevelHeadingIndex'] )
+					&&
+					intval(
+						$parsed_block['firstLevelHeadingIndex']
+					) + 1 === intval( $headings_number )
+				) {
+					ob_start();
+					self::get_instance()->get_action_content( $post_id );
+					$layout_content = ob_get_clean();
+					$content        = $layout_content . $content;
+				}
+			}
+
+			$this->is_layout_content_in_process = false;
+
+			return $content;
+		}
 	}
 }
 

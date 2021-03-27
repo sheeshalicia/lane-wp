@@ -70,6 +70,9 @@ if ( ! class_exists( 'Astra_Ext_Advanced_Hooks_Meta' ) ) {
 				'hooks'    => array(
 					'title' => __( 'Hooks', 'astra-addon' ),
 				),
+				'content'  => array(
+					'title' => __( 'Inside Post/Page Content', 'astra-addon' ),
+				),
 			);
 
 			/**
@@ -1033,7 +1036,10 @@ if ( ! class_exists( 'Astra_Ext_Advanced_Hooks_Meta' ) ) {
 						'default'  => array(),
 						'sanitize' => 'FILTER_DEFAULT',
 					),
-
+					'ast-advanced-hook-content'   => array(
+						'default'  => array(),
+						'sanitize' => 'FILTER_DEFAULT',
+					),
 				)
 			);
 
@@ -1414,7 +1420,7 @@ if ( ! class_exists( 'Astra_Ext_Advanced_Hooks_Meta' ) ) {
 			wp_nonce_field( basename( __FILE__ ), ASTRA_ADVANCED_HOOKS_POST_TYPE );
 			$stored = get_post_meta( $post->ID );
 
-			$advanced_hooks_meta = array( 'ast-advanced-hook-location', 'ast-advanced-hook-exclusion', 'ast-advanced-hook-users', 'ast-advanced-hook-padding', 'ast-advanced-hook-header', 'ast-advanced-hook-footer', 'ast-404-page' );
+			$advanced_hooks_meta = array( 'ast-advanced-hook-location', 'ast-advanced-hook-exclusion', 'ast-advanced-hook-users', 'ast-advanced-hook-padding', 'ast-advanced-hook-header', 'ast-advanced-hook-footer', 'ast-404-page', 'ast-advanced-hook-content' );
 
 			// Set stored and override defaults.
 			foreach ( $stored as $key => $value ) {
@@ -1442,6 +1448,7 @@ if ( ! class_exists( 'Astra_Ext_Advanced_Hooks_Meta' ) ) {
 			$footer            = ( isset( $meta['ast-advanced-hook-footer']['default'] ) ) ? $meta['ast-advanced-hook-footer']['default'] : array();
 			$footer            = ( isset( $meta['ast-advanced-hook-footer']['default'] ) ) ? $meta['ast-advanced-hook-footer']['default'] : array();
 			$layout_404        = ( isset( $meta['ast-404-page']['default'] ) ) ? $meta['ast-404-page']['default'] : array();
+			$content           = ( isset( $meta['ast-advanced-hook-content']['default'] ) ) ? $meta['ast-advanced-hook-content']['default'] : array();
 
 			$ast_advanced_hooks = array(
 				'include-locations' => $display_locations,
@@ -1454,6 +1461,7 @@ if ( ! class_exists( 'Astra_Ext_Advanced_Hooks_Meta' ) ) {
 				'header'            => $header,
 				'footer'            => $footer,
 				'layout-404'        => $layout_404,
+				'content'           => $content,
 			);
 			do_action( 'astra_advanced_hooks_settings_markup_before', $meta );
 			$this->page_header_tab( $ast_advanced_hooks );
@@ -1500,7 +1508,7 @@ if ( ! class_exists( 'Astra_Ext_Advanced_Hooks_Meta' ) ) {
 						unset( $_POST[ $key ][ $index ] );
 					}
 					$meta_value = array_map( 'esc_attr', $_POST[ $key ] );
-				} elseif ( in_array( $key, array( 'ast-advanced-hook-header', 'ast-advanced-hook-footer', 'ast-404-page' ) ) ) {
+				} elseif ( in_array( $key, array( 'ast-advanced-hook-header', 'ast-advanced-hook-footer', 'ast-404-page', 'ast-advanced-hook-content' ) ) ) {
 					if ( isset( $_POST[ $key ] ) ) {
 						$meta_value = array_map( 'esc_attr', $_POST[ $key ] );
 					}
@@ -1585,17 +1593,21 @@ if ( ! class_exists( 'Astra_Ext_Advanced_Hooks_Meta' ) ) {
 			$padding           = $options['padding'];
 			$header            = $options['header'];
 			$footer            = $options['footer'];
+			$content           = $options['content'];
 			$layout_404        = $options['layout-404'];
 
-			$padding_top       = isset( $padding['top'] ) ? $padding['top'] : '';
-			$padding_bottom    = isset( $padding['bottom'] ) ? $padding['bottom'] : '';
-			$header_sticky     = isset( $header['sticky'] ) ? $header['sticky'] : '';
-			$header_shrink     = isset( $header['shrink'] ) ? $header['shrink'] : '';
-			$header_on_devices = isset( $header['sticky-header-on-devices'] ) ? $header['sticky-header-on-devices'] : '';
-			$footer_sticky     = isset( $footer['sticky'] ) ? $footer['sticky'] : '';
-			$footer_on_devices = isset( $footer['sticky-footer-on-devices'] ) ? $footer['sticky-footer-on-devices'] : '';
-			$disable_header    = isset( $layout_404['disable_header'] ) ? $layout_404['disable_header'] : '';
-			$disable_footer    = isset( $layout_404['disable_footer'] ) ? $layout_404['disable_footer'] : '';
+			$padding_top           = isset( $padding['top'] ) ? $padding['top'] : '';
+			$padding_bottom        = isset( $padding['bottom'] ) ? $padding['bottom'] : '';
+			$header_sticky         = isset( $header['sticky'] ) ? $header['sticky'] : '';
+			$header_shrink         = isset( $header['shrink'] ) ? $header['shrink'] : '';
+			$header_on_devices     = isset( $header['sticky-header-on-devices'] ) ? $header['sticky-header-on-devices'] : '';
+			$footer_sticky         = isset( $footer['sticky'] ) ? $footer['sticky'] : '';
+			$footer_on_devices     = isset( $footer['sticky-footer-on-devices'] ) ? $footer['sticky-footer-on-devices'] : '';
+			$disable_header        = isset( $layout_404['disable_header'] ) ? $layout_404['disable_header'] : '';
+			$disable_footer        = isset( $layout_404['disable_footer'] ) ? $layout_404['disable_footer'] : '';
+			$content_location      = isset( $content['location'] ) ? $content['location'] : '';
+			$after_blocks_number   = isset( $content['after_block_number'] ) ? $content['after_block_number'] : '';
+			$before_heading_number = isset( $content['before_heading_number'] ) ? $content['before_heading_number'] : '';
 			?>
 			<table class="ast-advanced-hook-table widefat">
 
@@ -1614,6 +1626,7 @@ if ( ! class_exists( 'Astra_Ext_Advanced_Hooks_Meta' ) ) {
 								<?php endforeach; ?>
 							<?php endif; ?>
 						</select>
+						<p class="ast-inside-content-notice"><?php esc_html_e( 'This option will be applicable only for the posts/pages created with the block editor.', 'astra-addon' ); ?></p>
 					</td>
 				</tr>
 
@@ -1635,6 +1648,41 @@ if ( ! class_exists( 'Astra_Ext_Advanced_Hooks_Meta' ) ) {
 					<td class="ast-advanced-hook-row-content">
 					<input type="checkbox" name="ast-404-page[disable_footer]"
 								value="enabled" <?php checked( $disable_footer, 'enabled' ); ?> />
+					</td>
+				</tr>
+
+				<tr class="ast-advanced-hook-row ast-layout-content-location-required">
+					<td class="ast-advanced-hook-row-heading">
+						<label><?php esc_html_e( 'Location on post/page', 'astra-addon' ); ?></label>
+						<i class="ast-advanced-hook-heading-help dashicons dashicons-editor-help" title="<?php echo esc_attr__( 'Layout will be inserted at a selected location on page/post in the block editor.', 'astra-addon' ); ?>"></i>
+					</td>
+					<td class="ast-advanced-hook-row-content">
+					<select id="ast-advanced-hook-content-location" name="ast-advanced-hook-content[location]" style="width: 50%;" >
+						<option value="<?php echo esc_attr( 'after_blocks' ); ?>" <?php selected( 'after_blocks', $content_location, true ); ?> ><?php esc_html_e( 'After certain number of blocks', 'astra-addon' ); ?></option>
+						<option value="<?php echo esc_attr( 'before_headings' ); ?>" <?php selected( 'before_headings', $content_location, true ); ?>><?php esc_html_e( 'Before certain number of Heading blocks', 'astra-addon' ); ?></option>
+					</select>
+					</td>
+				</tr>
+				<tr class="ast-advanced-hook-row ast-layout-content-after-blocks">
+					<td class="ast-advanced-hook-row-heading">
+						<label><?php esc_html_e( 'Block Number', 'astra-addon' ); ?></label>
+					</td>
+					<td class="ast-advanced-hook-row-content">
+						<span class="ast-advanced-hook-inline-label"><?php esc_attr_e( 'Add layout after', 'astra-addon' ); ?></span>
+						<input type="number" class="ast-inside-content-number-field" name="ast-advanced-hook-content[after_block_number]"  min="1" oninput="validity.valid||(value='');" value="<?php echo esc_attr( $after_blocks_number ); ?>" >
+						<span class="ast-advanced-hook-inline-label"><?php esc_attr_e( 'Block(s)', 'astra-addon' ); ?></span>
+						<p class="ast-inside-content-blocks-notice"><?php esc_attr_e( 'Layout will be inserted after the selected number of blocks. Example - If you set it 3, the layout will be added after the first 3 blocks.', 'astra-addon' ); ?></p>
+					</td>
+				</tr>
+				<tr class="ast-advanced-hook-row ast-layout-content-before-heading">
+					<td class="ast-advanced-hook-row-heading">
+						<label><?php esc_html_e( 'Heading Block Number', 'astra-addon' ); ?></label>
+					</td>
+					<td class="ast-advanced-hook-row-content">
+						<span class="ast-advanced-hook-inline-label"><?php esc_attr_e( 'Add content before', 'astra-addon' ); ?></span>
+						<input type="number" class="ast-inside-content-number-field" name="ast-advanced-hook-content[before_heading_number]"  min="1" oninput="validity.valid||(value='');" value="<?php echo esc_attr( $before_heading_number ); ?>" >
+						<span class="ast-advanced-hook-inline-label"><?php esc_attr_e( 'Heading Block(s)', 'astra-addon' ); ?></span>
+						<p class="ast-inside-content-heading-notice"><?php esc_attr_e( 'Layout will be inserted before the selected number of Heading blocks. Example - If you set it 3, the layout will be added just before 3rd Heading block on page.', 'astra-addon' ); ?></p>
 					</td>
 				</tr>
 

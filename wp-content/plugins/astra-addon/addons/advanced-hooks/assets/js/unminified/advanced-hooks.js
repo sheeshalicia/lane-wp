@@ -1,7 +1,7 @@
 (function($){
 
 	/**
-	 * Advanced Hooks 
+	 * Advanced Hooks
 	 *
 	 * @class AstraAdvancedHooks
 	 * @since 1.0
@@ -13,7 +13,7 @@
 		 *
 		 * @since 1.0
 		 * @method init
-		 */ 
+		 */
 		init: function()
 		{
 			// Init backgrounds.
@@ -40,6 +40,7 @@
 			$( 'input[name="ast-advanced-hook-header[sticky]"]' ).on( 'change', AstraAdvancedHooks.stickyHeaderChanged );
 			$( 'input[name="ast-advanced-hook-footer[sticky]"]' ).on( 'change', AstraAdvancedHooks.stickyFooterChanged );
 			$( 'select[name="ast-advanced-hook-layout"]' ).on( 'change', AstraAdvancedHooks.layoutChanged );
+			$( 'select[name="ast-advanced-hook-content[location]"]' ).on( 'change', AstraAdvancedHooks.contentLocationChanged );
 		},
 
 		bind_tooltip: function() {
@@ -62,7 +63,7 @@
 				},
 			});
 		},
-		
+
 		php_snippet_area: function() {
 			var url = window.location.href,
 				button = $( '.ast-advanced-hook-enable-php-btn' ),
@@ -121,6 +122,10 @@
 			var layout      = $( '#ast-advanced-hook-layout' ).val(),
 			    sticky_header      = $( 'input[name="ast-advanced-hook-header[sticky]"]' );
 			    sticky_footer      = $( 'input[name="ast-advanced-hook-footer[sticky]"]' );
+				content_location      = $( '#ast-advanced-hook-content-location' ).val();
+
+			$( '.ast-layout-content-after-blocks, .ast-layout-content-before-heading, .ast-layout-content-location-required, .ast-inside-content-notice' ).hide();
+
 			if( 'header' == layout ){
 				$( '.ast-layout-hooks-required' ).hide();
 				$( '.ast-layout-header-required' ).show();
@@ -147,7 +152,26 @@
 				$( '.ast-layout-footer-required' ).hide();
 				$( '.ast-target-rules-display' ).hide();
 				$( '.ast-target-rules-exclude' ).hide();
+			} else if ( 'content' == layout ) {
+				$( '.ast-layout-content-required' ).show();
+				$( '.ast-target-rules-user' ).show();
+				$( '.ast-target-rules-display' ).show();
+				$( '.ast-layout-content-location-required' ).show();
+				$( '.ast-layout-hooks-required' ).hide();
+				$( '.ast-layout-header-required' ).hide();
+				$( '.ast-layout-footer-required' ).hide();
+				$( '.ast-404-layout-required' ).hide();
+				$( '.ast-inside-content-notice' ).show();
+
+				if( 'after_blocks' === content_location ) {
+					$( '.ast-layout-content-after-blocks' ).show();
+					$( '.ast-inside-content-blocks-notice' ).show();
+				} else {
+					$( '.ast-layout-content-before-heading' ).show();
+					$( '.ast-inside-content-heading-notice' ).show();
+				}
 			} else {
+				$( '.ast-layout-content-required' ).hide();
 				$( '.ast-layout-footer-required' ).hide();
 				$( '.ast-layout-header-required' ).hide();
 				$( '.ast-layout-hooks-required' ).hide();
@@ -193,26 +217,35 @@
 		layoutChanged: function()
 		{
 			var val     = $(this).val(),
+				content_location      = $( '#ast-advanced-hook-content-location' ).val(),
 			    sticky_header  = $( 'input[name="ast-advanced-hook-header[sticky]"]' ),
 			    sticky_footer  = $( 'input[name="ast-advanced-hook-footer[sticky]"]' );
+
+			$( '.ast-layout-content-after-blocks' ).hide();
+			$( '.ast-layout-content-before-heading' ).hide();
+			$( '.ast-layout-content-location-required' ).hide();
+			$( '.ast-inside-content-notice' ).hide();
 
 			if( 'header' == val ){
 				$( '.ast-layout-hooks-required' ).hide();
 				$( '.ast-layout-footer-required' ).hide();
 				$( '.ast-layout-header-required' ).show();
 				$( '.ast-layout-required' ).show();
+				$( '.ast-layout-content-required' ).hide();
 				$( '.ast-404-layout-required' ).hide();
 			} else if( 'hooks' == val ){
 				$( '.ast-layout-header-required' ).hide();
 				$( '.ast-layout-footer-required' ).hide();
 				$( '.ast-layout-hooks-required' ).show();
 				$( '.ast-layout-required' ).show();
+				$( '.ast-layout-content-required' ).hide();
 				$( '.ast-404-layout-required' ).hide();
 			} else if( 'footer' == val ) {
 				$( '.ast-layout-header-required' ).hide();
 				$( '.ast-layout-hooks-required' ).hide();
 				$( '.ast-layout-footer-required' ).show();
 				$( '.ast-layout-required' ).show();
+				$( '.ast-layout-content-required' ).hide();
 				$( '.ast-404-layout-required' ).hide();
 			} else if ( '404-page' == val ) {
 				$( '.ast-404-layout-required' ).show();
@@ -220,14 +253,34 @@
 				$( '.ast-layout-hooks-required' ).hide();
 				$( '.ast-layout-header-required' ).hide();
 				$( '.ast-layout-footer-required' ).hide();
+				$( '.ast-layout-content-required' ).hide();
 				$( '.ast-target-rules-display' ).hide();
 				$( '.ast-target-rules-exclude' ).hide();
+			} else if( 'content' == val ) {
+				$( '.ast-layout-content-required' ).show();
+				$( '.ast-target-rules-user' ).show();
+				$( '.ast-target-rules-display' ).show();
+				$( '.ast-layout-hooks-required' ).hide();
+				$( '.ast-layout-header-required' ).hide();
+				$( '.ast-layout-footer-required' ).hide();
+				$( '.ast-404-layout-required' ).hide();
+				$( '.ast-layout-content-location-required' ).show();
+				$( '.ast-inside-content-notice' ).show();
+
+				if( 'after_blocks' === content_location ) {
+					$( '.ast-layout-content-after-blocks' ).show();
+				} else {
+					$( '.ast-layout-content-before-heading' ).show();
+				}
+
 			} else {
+				$( '.ast-layout-content-required' ).hide();
 				$( '.ast-layout-header-required' ).hide();
 				$( '.ast-layout-footer-required' ).hide();
 				$( '.ast-layout-hooks-required' ).hide();
 				$( '.ast-layout-required' ).hide();
 				$( '.ast-404-layout-required' ).hide();
+				$( '.ast-layout-content-required' ).hide();
 			}
 
 			if( sticky_header.is(':checked') && 'header' == val ){
@@ -244,6 +297,19 @@
 				$( '.ast-layout-footer-sticky-required' ).hide();
 			}
 		},
+
+		contentLocationChanged: function() {
+			var location = $(this).val();
+
+			if( 'before_headings' == location ) {
+				$( '.ast-layout-content-after-blocks' ).hide();
+				$( '.ast-layout-content-before-heading' ).show();
+			} else {
+				$( '.ast-layout-content-after-blocks' ).show();
+				$( '.ast-layout-content-before-heading' ).hide();
+			}
+
+		}
 	}
 
 	/* Initializes the Advanced Hooks. */

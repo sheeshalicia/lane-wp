@@ -67,6 +67,13 @@ if ( ! class_exists( 'Astra_Ext_Advanced_Hooks_Loader' ) ) {
 
 			// Divi support.
 			add_filter( 'et_builder_post_types', array( $this, 'divi_builder_compatibility' ) );
+
+			add_filter(
+				'block_parser_class',
+				function () {
+					return 'Astra_WP_Block_Parser';
+				}
+			);
 		}
 
 
@@ -312,7 +319,7 @@ if ( ! class_exists( 'Astra_Ext_Advanced_Hooks_Loader' ) ) {
 					/* translators: %s: singular custom post type name */
 					4  => sprintf( __( '%s updated.', 'astra-addon' ), $singular_name ),
 					/* translators: %1$s: singular custom post type name ,%2$s: date and time of the revision */
-					5  => isset( $_GET['revision'] ) ? sprintf( __( '%1$s restored to revision from %2$s', 'astra-addon' ), $singular_name, wp_post_revision_title( (int) $_GET['revision'], false ) ) : false, // phpcs:ignore WordPress.Security.NonceVerification.Recommended 
+					5  => isset( $_GET['revision'] ) ? sprintf( __( '%1$s restored to revision from %2$s', 'astra-addon' ), $singular_name, wp_post_revision_title( (int) $_GET['revision'], false ) ) : false, // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 					/* translators: %s: singular custom post type name */
 					6  => sprintf( __( '%s published.', 'astra-addon' ), $singular_name ),
 					/* translators: %s: singular custom post type name */

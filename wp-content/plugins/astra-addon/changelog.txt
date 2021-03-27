@@ -1,3 +1,6 @@
+v3.2.0
+- New: Introduced Inside Post/Page content option in Custom Layouts.
+
 v3.1.0
 - New: Ability to clone and delete elements from Header/Footer Builder. ( https://wpastra.com/docs/new-features-clone-delete/ )
 - New: Added new color options for Add to Cart Tray.
